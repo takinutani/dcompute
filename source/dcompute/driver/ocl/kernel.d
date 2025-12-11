@@ -30,9 +30,15 @@ struct Kernel(F) if (is(F == function) || is(F==void))
         checkErrors();
     }
     
-    void setArg(T)(uint index,T val)
+    void setArg(T)(uint index,T val, const bool isPrivate=false)
     {
-        status = cast(Status)clSetKernelArg(this.raw,index,T.sizeof,&val);
+		// import std.stdio: writefln;
+		// writefln("kernel.d::setArg(%d,%s %s); %d %s", index, typeof(val).stringof, val.stringof, T.sizeof, T.stringof);
+		static if (__traits(hasMember, T, "raw")) {
+			status = cast(Status)clSetKernelArg(this.raw, index, cl_mem.sizeof, (isPrivate ? null : &val.raw));
+		} else {
+			status = cast(Status)clSetKernelArg(this.raw, index, T.sizeof, (isPrivate ? null : &val));
+		}
         checkErrors();
     }
 }
