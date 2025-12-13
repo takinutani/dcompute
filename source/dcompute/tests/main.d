@@ -1,4 +1,6 @@
-// version = DComputeTestCUDA;
+version (DComputeTesting) {
+    version = DComputeTestCUDA;
+}
 
 //import dcompute.tests.test;
 
@@ -11,6 +13,7 @@ import std.exception : enforce;
 import std.experimental.allocator;
 import std.array;
 import std.typecons;
+import std.math.traits : isNaN;
 
 import dcompute.tests.dummykernels : saxpy;
 
@@ -27,7 +30,7 @@ else
 //         [1 ] AMD Accelerated Parallel Processing
 //         [2 ] Portable Computing Language
 //         [3*] Intel(R) OpenCL
-enum CL_PLATFORM_INDEX = 3;
+enum CL_PLATFORM_INDEX = 2;
 // enum CL_PLATFORM_INDEX = 2;
 
 int main(string[] args)
@@ -48,8 +51,8 @@ int main(string[] args)
         auto platforms = Platform.getPlatforms(theAllocator);
         auto platform = platforms[CL_PLATFORM_INDEX];
         DerelictCL.reload(CLVersion.CL21);
+
         writeln("Platforms:");
-        // writeln("\t", platforms.map!(p => p.name));
         foreach (i, ref p; platforms)
         {
             writefln("\t[%d%1s] %s", i, (i == CL_PLATFORM_INDEX) ? "*" : "", p.name);
@@ -58,19 +61,21 @@ int main(string[] args)
 
         auto devices  = platform.getDevices(theAllocator);
         writeln("Devices:");
-        // writeln("\t", devices.map!(d => d.name));
         foreach (i, ref d; devices)
         {
             writefln("\t[%d] %s", i, d.name);
         }
-        // writeln("\tChosen: ", devices[0].name);
+        writeln("\tChosen: ", devices[0].name);
 
-        auto plist = propertyList!(Context.Properties)(Context.Properties.platform, platform.raw);
+        auto plist    = propertyList!(Context.Properties)(Context.Properties.platform, platform.raw);
         writeln(plist);
-        auto ctx = Context(devices[0 .. 1], null  /*FIXME: plist[]*/ );
-        scope(exit) ctx.release();
-        // Change the file to the built OpenCL version.
-        Program.globalProgram = ctx.createProgram(cast(ubyte[]) read("./kernels_ocl210_64.spv"));
+        auto ctx      = Context(devices[0 ..1],null /*FIXME: plist[]*/);
+	    // Change the file to the built OpenCL version.
+        version (Windows) {
+            Program.globalProgram = ctx.createProgram(cast(ubyte[]) read("./kernels_ocl200_64.spv"));
+        } else {
+            Program.globalProgram = ctx.createProgram(cast(ubyte[]) read("./.dub/obj/kernels_ocl200_64.spv"));
+        }
 
         try
         {
@@ -93,11 +98,11 @@ int main(string[] args)
         Event e = queue.enqueue!(saxpy)([N])(b_res,alpha,b_x,b_y, N);
         e.wait();
 
-        // if (!res.length) {
-        //     writeln("Read buffer sync.");
-        //     Event[] ev = [] ~ e;
-        //     queue.read!(float)(b_res, res, Flag!"Blocking".yes, 0, ev);
-        // }
+        // zero-copy failed
+        if (isNaN(res[0])) {
+            writeln("Read buffer from device");
+            queue.read!(float)(b_res, res);
+        }
     }
 
     version(DComputeTestCUDA)
@@ -109,8 +114,11 @@ int main(string[] args)
         auto ctx   = Context(dev); scope(exit) ctx.detach();
 
         // Change the file to match your GPU.
-        // Program.globalProgram = Program.fromFile("./.dub/obj/kernels_cuda210_64.ptx");
-        Program.globalProgram = Program.fromFile("./kernels_cuda210_64.ptx");
+        version (Windows) {
+            Program.globalProgram = Program.fromFile("./kernels_cuda210_64.ptx");
+        } else {
+            Program.globalProgram = Program.fromFile("./.dub/obj/kernels_cuda210_64.ptx");
+        }
         auto q = Queue(false);
 
         Buffer!(float) b_res, b_x, b_y;
