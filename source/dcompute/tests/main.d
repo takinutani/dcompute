@@ -61,7 +61,19 @@ int main(string[] args)
 
         auto devices  = platform.getDevices(theAllocator);
         writeln("Devices:");
-        writeln("\t", devices.map!(d => d.name));
+        foreach (i, ref d; devices)
+        {
+            writefln("\t[%d] %s", i, d.name);
+            writefln("\t\t%s", d.vendor);
+            writefln("\t\t(%d)%s", d.type, d.type);
+            writefln("\t\t(%d)%s", d.queueProperties, d.queueProperties);
+            writefln("\t\t(%d)%s", d.floatFPConfig, d.floatFPConfig);
+            writefln("\t\t(%d)%s", d.GLobalMemoryCacheType, d.GLobalMemoryCacheType);
+            writefln("\t\t(%d)%s", d.executionCapabilities, d.executionCapabilities);
+            // writefln("\t\t%s", d.OpenCLCVersion);
+            // writefln("\t\t%s", d.deviceVersion);
+            // writefln("\t\t%s", d.builtinKernels);
+        }
         writeln("\tChosen: ", devices[0].name);
 
         auto plist    = propertyList!(Context.Properties)(Context.Properties.platform, platform.raw);
