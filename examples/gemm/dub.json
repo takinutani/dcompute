@@ -1,0 +1,12 @@
+{
+	"dependencies": {
+		"dcompute": {
+			"path": "../..",
+		}
+	},
+	"description": "GEMM example",
+	"name": "mygemm",
+	"dflags-ldc": ["--mdcompute-targets=ocl-200", "-oq"],
+	"versions": ["LDC_DCompute"],
+	"excludedSourceFiles": ["./source/dcompute/tests/*"],
+}

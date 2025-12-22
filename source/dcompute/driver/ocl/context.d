@@ -9,7 +9,7 @@ struct Context
 {
     cl_context raw;
     
-    enum Properties
+    enum Properties : cl_context_properties
     {
         platform        = 0x1084,
         interopUserSync = 0x1085,

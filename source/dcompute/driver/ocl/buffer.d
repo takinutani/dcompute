@@ -13,4 +13,10 @@ struct Buffer(T)
         region =0x1220,
     }
     // opSlice clCreateSubBuffer
+
+    void release()
+    {
+        status = cast(Status) clReleaseMemObject(raw);
+        checkErrors();
+    }
 }
