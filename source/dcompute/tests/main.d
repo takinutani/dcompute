@@ -61,10 +61,7 @@ int main(string[] args)
 
         auto devices  = platform.getDevices(theAllocator);
         writeln("Devices:");
-        foreach (i, ref d; devices)
-        {
-            writefln("\t[%d] %s", i, d.name);
-        }
+        writeln("\t", devices.map!(d => d.name));
         writeln("\tChosen: ", devices[0].name);
 
         auto plist    = propertyList!(Context.Properties)(Context.Properties.platform, platform.raw);
