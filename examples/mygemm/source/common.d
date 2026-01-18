@@ -1,4 +1,5 @@
 import core.stdc.config;
+import core.time;
 
 extern (C):
 
@@ -53,6 +54,7 @@ struct profile_t
 {
     double t; // Time
     long kf; // KFlops
+    Duration dur;
 }
 
 // Number of timers

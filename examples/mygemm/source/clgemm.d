@@ -108,7 +108,7 @@ void myclblas(float[] A, float[] B, float[] C,
     // writefln("## %d devices, running on %d: '%s'", devices.length, CURRENT_DEVICE, device.name);
 
     auto plist    = propertyList!(Context.Properties)(Context.Properties.platform, platform.raw);
-    writeln(plist);
+    // writeln(plist);
     // auto ctx      = Context(devices[0 ..1], null /*FIXME: plist[]*/);
     auto ctx      = Context(devices[0 ..1], plist);
     // auto ctx      = Context(devices[0 ..1], props);
@@ -136,21 +136,22 @@ void myclblas(float[] A, float[] B, float[] C,
     // err = clBuildProgram(program, 0, NULL, COMPILER_OPTIONS, NULL, NULL);
 
     Program.globalProgram = ctx.createProgram(cast(ubyte[]) read("./kernels_ocl200_64.spv"));
-    try
-    {
-        Program.globalProgram.build(devices, COMPILER_OPTIONS);
-    }
-    catch(DComputeDriverException e)
-    {
-        auto b = Build(Program.globalProgram, device);
-        writeln(b.log);
-    }
+    Program.globalProgram.build(devices, COMPILER_OPTIONS);
+    // try
+    // {
+    //     Program.globalProgram.build(devices, COMPILER_OPTIONS);
+    // }
+    // catch(DComputeDriverException e)
+    // {
+    //     auto b = Build(Program.globalProgram, device);
+    //     writeln(b.log);
+    // }
     scope(exit) Program.globalProgram.release();
-
-    cl_program program = Program.globalProgram.raw;
 
     // Check for compilation errors
     version (Debug) {
+        cl_program program = Program.globalProgram.raw;
+
         size_t logSize;
         clGetProgramBuildInfo(cast(cl_program)program, device.raw, CL_PROGRAM_BUILD_LOG, 0, null, &logSize);
         checkErrors();
